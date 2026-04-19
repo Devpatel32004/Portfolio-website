@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { navItems } from "@/data/portfolio";
@@ -12,20 +11,68 @@ export function Navbar() {
   const [activeSection, setActiveSection] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
-  const navRefs = useRef({});
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef(null);
 
+  // Unified scroll function for desktop and mobile
+  const scrollToSection = useCallback((sectionId) => {
+    // Flag to disable observer during programmatic scroll
+    isProgrammaticScroll.current = true;
+    
+    // Update active state immediately
+    setActiveSection(sectionId);
+    
+    // Update URL hash without triggering scroll
+    window.history.replaceState(null, null, `#${sectionId}`);
+    
+    // Scroll to section
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+    
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Re-enable observer after scroll completes
+    // Average smooth scroll duration is ~500-800ms
+    scrollTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 1000);
+  }, []);
+
+  // IntersectionObserver for scroll spy (manual scrolling)
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        // Skip if we're in a programmatic scroll
+        if (isProgrammaticScroll.current) return;
+        
+        // Find the most visible section
+        let bestEntry = null;
+        let bestRatio = 0;
+        
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
+          if (entry.isIntersecting && entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio;
+            bestEntry = entry;
           }
         });
+        
+        if (bestEntry) {
+          setActiveSection(bestEntry.target.id);
+          // Update URL hash to match
+          window.history.replaceState(null, null, `#${bestEntry.target.id}`);
+        }
       },
       { 
-        threshold: 0.3,
-        rootMargin: "-80px 0px -60% 0px" // Account for sticky header + trigger earlier
+        threshold: [0.1, 0.2, 0.3, 0.4, 0.5],
+        rootMargin: "-70px 0px -40% 0px"
       }
     );
 
@@ -36,7 +83,57 @@ export function Navbar() {
       }
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle initial hash on page load
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash && navItems.some(item => item.id === hash)) {
+      setActiveSection(hash);
+      // Small delay to let page settle before scrolling
+      setTimeout(() => {
+        document.getElementById(hash)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 100);
+    }
+  }, []);
+
+  // Handle mobile navigation
+  const handleMobileNavClick = useCallback((sectionId) => {
+    // Step 1: Set active state immediately
+    setActiveSection(sectionId);
+    
+    // Step 2: Close menu (smooth animation)
+    setMenuOpen(false);
+    
+    // Step 3: After menu closes, scroll
+    setTimeout(() => {
+      isProgrammaticScroll.current = true;
+      window.history.replaceState(null, null, `#${sectionId}`);
+      
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+      
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 1000);
+    }, 250); // Match menu close animation
   }, []);
 
   return (
@@ -47,28 +144,28 @@ export function Navbar() {
       transition={{ duration: 0.5 }}
     >
       <div className="flex items-center justify-between">
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Link
-            href="#hero"
-            className="bg-linear-to-r from-cyan-300 to-violet-400 bg-clip-text text-lg font-bold text-transparent"
-          >
-            Dev Portfolio
-          </Link>
-        </motion.div>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => scrollToSection("hero")}
+          className="bg-linear-to-r from-cyan-300 to-violet-400 bg-clip-text text-lg font-bold text-transparent"
+        >
+          Dev Portfolio
+        </motion.button>
 
+        {/* Desktop Navigation */}
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((item) => (
-            <motion.a
+            <motion.button
               key={item.id}
-              href={`#${item.id}`}
-              ref={(el) => { navRefs.current[item.id] = el; }}
+              type="button"
+              onClick={() => scrollToSection(item.id)}
               className={cn(
                 "relative rounded-xl px-3 py-2 text-sm text-zinc-300 transition-colors duration-300 hover:text-cyan-200",
                 activeSection === item.id && "text-cyan-200"
               )}
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={() => setHoveredItem(null)}
-              onClick={() => setActiveSection(item.id)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -95,10 +192,11 @@ export function Navbar() {
               )}
               
               {item.label}
-            </motion.a>
+            </motion.button>
           ))}
         </nav>
 
+        {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="icon"
@@ -132,6 +230,7 @@ export function Navbar() {
         </Button>
       </div>
 
+      {/* Mobile Navigation Menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -139,25 +238,13 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
           >
             {navItems.map((item, index) => (
               <motion.button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  // Step 1: Immediately set active state
-                  setActiveSection(item.id);
-                  // Step 2: Close menu (triggers smooth exit animation)
-                  setMenuOpen(false);
-                  // Step 3: After menu closes, scroll to section
-                  setTimeout(() => {
-                    document.getElementById(item.id)?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start"
-                    });
-                  }, 200); // Match menu close animation duration
-                }}
+                onClick={() => handleMobileNavClick(item.id)}
                 className={cn(
                   "w-full text-left rounded-xl px-3 py-2 text-sm text-zinc-300 transition-all duration-300",
                   activeSection === item.id 
