@@ -18,7 +18,7 @@ const vaultItems = [
 
 export function VaultSection() {
   return (
-    <section id="vault" className="py-16 md:py-20">
+    <section id="vault" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="Recruiter Vault"

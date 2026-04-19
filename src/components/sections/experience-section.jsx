@@ -13,7 +13,7 @@ export function ExperienceSection() {
   const [expandedJob, setExpandedJob] = useState(null);
 
   return (
-    <section id="experience" className="py-16 md:py-20">
+    <section id="experience" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="Experience Timeline"

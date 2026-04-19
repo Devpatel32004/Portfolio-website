@@ -18,7 +18,7 @@ const toolIcons = {
 
 export function SkillsSection() {
   return (
-    <section id="skills" className="py-16 md:py-20">
+    <section id="skills" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="Skills"

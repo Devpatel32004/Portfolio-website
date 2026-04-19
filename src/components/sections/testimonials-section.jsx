@@ -16,7 +16,7 @@ const achievementIcons = {
 
 export function TestimonialsSection() {
   return (
-    <section id="education" className="py-16 md:py-20">
+    <section id="education" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="Education & Achievements"

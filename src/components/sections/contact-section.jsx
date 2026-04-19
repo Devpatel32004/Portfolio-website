@@ -99,7 +99,7 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-16 md:py-20">
+    <section id="contact" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="Contact"

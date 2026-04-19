@@ -23,7 +23,10 @@ export function Navbar() {
           }
         });
       },
-      { threshold: 0.45 }
+      { 
+        threshold: 0.3,
+        rootMargin: "-80px 0px -60% 0px" // Account for sticky header + trigger earlier
+      }
     );
 
     navItems.forEach((item) => {
@@ -65,6 +68,7 @@ export function Navbar() {
               )}
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={() => setHoveredItem(null)}
+              onClick={() => setActiveSection(item.id)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -138,12 +142,24 @@ export function Navbar() {
             transition={{ duration: 0.2 }}
           >
             {navItems.map((item, index) => (
-              <motion.a
+              <motion.button
                 key={item.id}
-                href={`#${item.id}`}
-                onClick={() => setMenuOpen(false)}
+                type="button"
+                onClick={() => {
+                  // Step 1: Immediately set active state
+                  setActiveSection(item.id);
+                  // Step 2: Close menu (triggers smooth exit animation)
+                  setMenuOpen(false);
+                  // Step 3: After menu closes, scroll to section
+                  setTimeout(() => {
+                    document.getElementById(item.id)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start"
+                    });
+                  }, 200); // Match menu close animation duration
+                }}
                 className={cn(
-                  "rounded-xl px-3 py-2 text-sm text-zinc-300 transition-all duration-300",
+                  "w-full text-left rounded-xl px-3 py-2 text-sm text-zinc-300 transition-all duration-300",
                   activeSection === item.id 
                     ? "bg-gradient-to-r from-cyan-500/20 to-violet-500/20 text-cyan-200" 
                     : "hover:bg-cyan-300/10 hover:text-cyan-200"
@@ -153,7 +169,7 @@ export function Navbar() {
                 transition={{ delay: index * 0.05 }}
               >
                 {item.label}
-              </motion.a>
+              </motion.button>
             ))}
           </motion.div>
         )}

@@ -10,7 +10,7 @@ import { profile } from "@/data/portfolio";
 
 export function AboutSection() {
   return (
-    <section id="about" className="py-16 md:py-20">
+    <section id="about" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="About Me"

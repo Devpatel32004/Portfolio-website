@@ -62,7 +62,7 @@ export function ProjectsSection() {
 
 
   return (
-    <section id="projects" className="py-16 md:py-20">
+    <section id="projects" className="scroll-mt-24 py-16 md:py-20">
       <div className="mx-auto w-[min(1100px,95%)]">
         <SectionHeading
           title="Featured Projects"

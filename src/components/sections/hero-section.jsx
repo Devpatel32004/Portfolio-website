@@ -9,7 +9,7 @@ import { Typewriter } from "@/components/typewriter";
 
 export function HeroSection() {
   return (
-    <section id="hero" className="relative overflow-hidden pt-20">
+    <section id="hero" className="relative overflow-hidden scroll-mt-24 pt-20">
       <div className="absolute inset-0 -z-10 opacity-50">
         <div className="mesh-gradient h-full w-full" />
       </div>
